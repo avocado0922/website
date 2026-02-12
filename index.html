@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>新年随机菜单生成器</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Microsoft YaHei', sans-serif;
+    }
+
+    body {
+      background-color: #f9f3e9;
+      color: #333;
+      line-height: 1.6;
+      padding: 20px;
+      background-image: linear-gradient(to bottom, #fff8e1, #ffecb3);
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 0;
+      position: relative;
+    }
+
+    header {
+      text-align: center;
+      width: 100%;
+      margin-bottom: 30px;
+      padding: 20px;
+      background-color: #d32f2f;
+      color: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      font-size: 1.2rem;
+      opacity: 0.9;
+    }
+
+    /* 伸缩侧边栏样式 - 移动到最右侧 */
+    .control-panel {
+      width: 80px;
+      min-width: 80px;
+      background: white;
+      padding: 15px;
+      border-radius: 10px 0 0 10px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+      transition: all 0.3s ease;
+      cursor: pointer;
+      position: relative;
+      z-index: 10;
+      overflow: hidden;
+      order: 3; /* 设置在最右侧 */
+    }
+
+    .control-panel:hover {
+      width: 300px;
+    }
+
+    .control-panel:hover .panel-info {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .panel-info {
+      opacity: 0;
+      transform: translateX(20px);
+      transition: all 0.3s ease 0.1s;
+      white-space: nowrap;
+      text-align: right;
+    }
+
+    .panel-info h3 {
+      font-size: 1.1rem;
+      margin-bottom: 8px;
+      color: #d32f2f;
+    }
+
+    .panel-info p {
+      font-size: 0.9rem;
+      color: #666;
+      line-height: 1.4;
+    }
+
+    .menu-display {
+      flex: 2;
+      min-width: 500px;
+      background: white;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+
+    .shopping-list {
+      flex: 1;
+      min-width: 350px;
+      background: white;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+
+    /* 移动端响应式设计 */
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      .control-panel {
+        width: 100%;
+        min-width: auto;
+        border-radius: 10px;
+        margin-left: 0;
+        padding: 20px;
+      }
+
+      .control-panel:hover {
+        width: 100%;
+      }
+
+      .panel-info {
+        opacity: 1;
+        transform: translateX(0);
+        white-space: normal;
+      }
+
+      .menu-display {
+        min-width: auto;
+        margin-left: 0;
+      }
+
+      .shopping-list {
+        min-width: auto;
+      }
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: #d32f2f;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+
+    button {
+      background-color: #d32f2f;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background-color: #b71c1c;
+    }
+
+    .search-results {
+      margin-top: 20px;
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #eee;
+      border-radius: 5px;
+      padding: 10px;
+    }
+
+    .search-item {
+      padding: 8px;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+    }
+
+    .search-item:hover {
+      background-color: #f5f5f5;
+    }
+
+    .category-title {
+      font-size: 1.5rem;
+      color: #d32f2f;
+      margin: 25px 0 15px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #ffccbc;
+    }
+
+    .dish-card {
+      background: #fff8f8;
+      border-left: 4px solid #d32f2f;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 5px;
+      position: relative;
+      transition: transform 0.2s;
+    }
+
+    .dish-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+
+    .dish-name {
+      font-weight: bold;
+      font-size: 1.2rem;
+      margin-bottom: 5px;
+    }
+
+    .dish-actions {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .action-btn {
+      background: none;
+      border: none;
+      color: #d32f2f;
+      cursor: pointer;
+      font-size: 14px;
+      width: auto;
+      padding: 5px;
+    }
+
+    .serving-info {
+      background-color: #ffebee;
+      padding: 5px 10px;
+      border-radius: 15px;
+      font-size: 0.9rem;
+      display: inline-block;
+      margin-top: 5px;
+    }
+
+    /* 购物清单样式 */
+    .shopping-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .list-controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+    }
+
+    .list-controls button {
+      padding: 8px 15px;
+      font-size: 14px;
+      width: auto;
+      flex: 1;
+    }
+
+    .list-summary {
+      background-color: #f5f5f5;
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 15px;
+      font-size: 14px;
+    }
+
+    .list-summary span {
+      font-weight: bold;
+      color: #d32f2f;
+    }
+
+    .shopping-items {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .shopping-item {
+      padding: 12px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .shopping-item:hover {
+      background-color: #f9f9f9;
+    }
+
+    .item-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+    }
+
+    .item-checkbox {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+
+    .item-name {
+      cursor: pointer;
+      padding: 5px 0;
+      flex: 1;
+    }
+
+    .item-name.strikethrough {
+      text-decoration: line-through;
+      color: #888;
+    }
+
+    .item-quantity {
+      font-size: 12px;
+      background-color: #eee;
+      padding: 2px 8px;
+      border-radius: 10px;
+      white-space: nowrap;
+    }
+
+    .category-badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background-color: #e8f5e9;
+      color: #2e7d32;
+      white-space: nowrap;
+    }
+
+    /* 按钮样式 */
+    .export-btn {
+      background-color: #388e3c;
+    }
+
+    .export-btn:hover {
+      background-color: #2e7d32;
+    }
+
+    .print-btn {
+      background-color: #1976d2;
+    }
+
+    .print-btn:hover {
+      background-color: #1565c0;
+    }
+
+    /* 配方样式 */
+    .recipe-text {
+      font-size: 14px;
+      color: #666;
+      margin-top: 8px;
+      padding-left: 10px;
+      border-left: 2px solid #ddd;
+    }
+
+    /* 响应式布局 */
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+      }
+
+      .control-panel, .menu-display, .shopping-list {
+        min-width: 100%;
+      }
+
+      .dish-actions {
+        position: static;
+        margin-top: 10px;
+        justify-content: flex-end;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>&#127881; 新年随机菜单生成器 &#127869;️</h1>
+    <p class="subtitle">告别选择困难，轻松规划完美年夜饭！</p>
+  </header>
+
+  <div class="menu-display" id="menu-display">
+    <h2>今日菜单</h2>
+    <p>点击"生成随机菜单"开始吧！</p>
+  </div>
+
+  <div class="shopping-list" id="shopping-list">
+    <div class="shopping-header">
+      <h2>购物清单</h2>
+    </div>
+    <div class="list-controls">
+      <button id="generate-list">生成购物清单</button>
+      <button id="clear-list" class="export-btn">清空清单</button>
+      <button id="print-list" class="print-btn">打印清单</button>
+    </div>
+    <div class="list-summary">
+      总计: <span id="total-items">0</span> 项物品 | 已购: <span id="purchased-items">0</span> 项
+    </div>
+    <div class="shopping-items" id="shopping-items">
+      <p>点击"生成购物清单"来获取所需食材</p>
+    </div>
+  </div>
+
+  <div class="control-panel">
+    <div class="form-group">
+      <label for="people-count">用餐人数</label>
+      <select id="people-count">
+        <option value="1">1人</option>
+        <option value="2">2人</option>
+        <option value="3">3人</option>
+        <option value="4" selected>4人</option>
+        <option value="5">5人</option>
+        <option value="6">6人</option>
+        <option value="7">7人</option>
+        <option value="8">8人</option>
+        <option value="9">9人</option>
+        <option value="10">10人</option>
+      </select>
+    </div>
+
+    <button id="generate-menu">生成随机菜单</button>
+
+    <div class="form-group">
+      <label for="search-dish">搜索菜品</label>
+      <input type="text" id="search-dish" placeholder="输入菜品名称...">
+      <div class="search-results" id="search-results"></div>
+    </div>
+
+
+  </div>
+</div>
+
+<script>
+  // 1. 定义新年菜品库（包含菜品名称、做法和对应食材，食材格式：[食材名称, 单人用量, 单位]）
+  const newYearFoodLibrary = {
+    "凉菜": [
+      {
+        name: "凉拌猪耳朵",
+        recipe: "猪耳朵焯水后切丝，加蒜末、生抽、香醋、香菜、小米辣拌匀",
+        ingredients: [
+          ["猪耳朵", 0.2, "斤"],
+          ["生抽", 5, "毫升"],
+          ["香醋", 3, "毫升"],
+          ["蒜末", 2, "克"],
+          ["香菜", 5, "克"],
+          ["小米辣", 1, "个"]
+        ]
+      },
+      {
+        name: "拍黄瓜",
+        recipe: "黄瓜用刀背拍散，加蒜末、醋、生抽、香油拌匀",
+        ingredients: [
+          ["黄瓜", 0.3, "斤"],
+          ["蒜末", 2, "克"],
+          ["辣椒油", 5, "毫升"],
+          ["盐", 0.5, "克"],
+          ["生抽", 3, "毫升"]
+        ]
+      },
+      {
+        name: "凉拌海带丝",
+        recipe: "海带丝泡发后焯水，加调味料拌匀",
+        ingredients: [
+          ["干海带丝", 10, "克"],
+          ["生抽", 5, "毫升"],
+          ["香醋", 4, "毫升"],
+          ["香油", 2, "毫升"],
+          ["白糖", 1, "克"],
+          ["葱花", 3, "克"]
+        ]
+      },
+      {
+        name: "卤牛肉切片",
+        recipe: "卤牛肉切片，配以酱料和香菜",
+        ingredients: [
+          ["卤牛肉", 0.25, "斤"],
+          ["生抽", 3, "毫升"],
+          ["芥末酱", 2, "克"],
+          ["香菜", 5, "克"]
+        ]
+      }
+    ],
+    "热菜": [
+      {
+        name: "红烧肉",
+        recipe: "带皮五花肉切块，用冰糖、生抽、老抽、生姜、八角、桂皮慢炖至软烂",
+        ingredients: [
+          ["带皮五花肉", 0.4, "斤"],
+          ["冰糖", 10, "克"],
+          ["生抽", 15, "毫升"],
+          ["老抽", 5, "毫升"],
+          ["生姜", 10, "克"],
+          ["八角", 1, "颗"],
+          ["桂皮", 1, "小段"]
+        ]
+      },
+      {
+        name: "清蒸鲈鱼",
+        recipe: "鲈鱼处理干净，加葱姜蒸熟，淋上热油和蒸鱼豉油",
+        ingredients: [
+          ["鲈鱼", 0.8, "斤"],
+          ["生姜", 15, "克"],
+          ["葱段", 20, "克"],
+          ["蒸鱼豉油", 20, "毫升"],
+          ["食用油", 15, "毫升"],
+          ["红椒丝", 5, "克"]
+        ]
+      },
+      {
+        name: "可乐鸡翅",
+        recipe: "鸡翅中与可乐、生抽、生姜、料酒同煮，收汁即可",
+        ingredients: [
+          ["鸡翅中", 0.5, "斤"],
+          ["可乐", 200, "毫升"],
+          ["生抽", 10, "毫升"],
+          ["生姜", 8, "克"],
+          ["料酒", 10, "毫升"],
+          ["盐", 0.5, "克"]
+        ]
+      },
+      {
+        name: "蒜蓉西兰花",
+        recipe: "西兰花焯水后与蒜末、盐、生抽、食用油快炒",
+        ingredients: [
+          ["西兰花", 0.6, "斤"],
+          ["蒜末", 10, "克"],
+          ["盐", 1, "克"],
+          ["食用油", 10, "毫升"],
+          ["生抽", 5, "毫升"]
+        ]
+      },
+      {
+        name: "宫保鸡丁",
+        recipe: "鸡胸肉切丁，与花生米、干辣椒一起炒制，酸甜微辣",
+        ingredients: [
+          ["鸡胸肉", 0.3, "斤"],
+          ["花生米", 20, "克"],
+          ["干辣椒", 5, "个"],
+          ["生抽", 10, "毫升"],
+          ["香醋", 5, "毫升"],
+          ["生姜", 5, "克"],
+          ["大蒜", 5, "克"]
+        ]
+      },
+      {
+        name: "红烧鱼块",
+        recipe: "草鱼块裹淀粉炸至金黄，加调料红烧",
+        ingredients: [
+          ["草鱼块", 0.6, "斤"],
+          ["淀粉", 15, "克"],
+          ["生抽", 10, "毫升"],
+          ["老抽", 3, "毫升"],
+          ["生姜", 10, "克"],
+          ["料酒", 10, "毫升"],
+          ["盐", 1, "克"]
+        ]
+      }
+    ],
+    "汤类": [
+      {
+        name: "番茄鸡蛋汤",
+        recipe: "番茄炒出汁后加水，打入蛋花，撒上葱花",
+        ingredients: [
+          ["番茄", 0.4, "斤"],
+          ["鸡蛋", 1, "个"],
+          ["葱花", 5, "克"],
+          ["盐", 1, "克"],
+          ["食用油", 5, "毫升"],
+          ["淀粉", 5, "克"]
+        ]
+      },
+      {
+        name: "紫菜蛋花汤",
+        recipe: "紫菜泡发，水开后加入蛋液，调味即可",
+        ingredients: [
+          ["紫菜", 5, "克"],
+          ["鸡蛋", 1, "个"],
+          ["葱花", 5, "克"],
+          ["盐", 1, "克"],
+          ["香油", 2, "毫升"],
+          ["淀粉", 5, "克"]
+        ]
+      },
+      {
+        name: "萝卜排骨汤",
+        recipe: "排骨焯水后与白萝卜、生姜、葱段慢炖，汤鲜味美",
+        ingredients: [
+          ["排骨", 0.5, "斤"],
+          ["白萝卜", 0.6, "斤"],
+          ["生姜", 10, "克"],
+          ["盐", 2, "克"],
+          ["葱段", 10, "克"]
+        ]
+      },
+      {
+        name: "香菇鸡汤",
+        recipe: "鸡肉与干香菇、生姜、葱段、料酒同煮，慢炖出味",
+        ingredients: [
+          ["鸡肉", 0.6, "斤"],
+          ["干香菇", 15, "克"],
+          ["生姜", 10, "克"],
+          ["盐", 2, "克"],
+          ["葱段", 10, "克"],
+          ["料酒", 10, "毫升"]
+        ]
+      }
+    ],
+    "主食": [
+      {
+        name: "白米饭",
+        recipe: "优质大米洗净，按比例加水煮熟",
+        ingredients: [
+          ["大米", 50, "克"],
+          ["水", 100, "毫升"]
+        ]
+      },
+      {
+        name: "饺子（猪肉白菜馅）",
+        recipe: "面粉做皮，包入猪肉白菜馅料，水煮或煎食",
+        ingredients: [
+          ["饺子皮", 20, "张"],
+          ["猪肉馅", 0.3, "斤"],
+          ["白菜", 0.4, "斤"],
+          ["生姜", 5, "克"],
+          ["生抽", 10, "毫升"],
+          ["盐", 1, "克"],
+          ["香油", 5, "毫升"]
+        ]
+      },
+      {
+        name: "蛋炒饭",
+        recipe: "鸡蛋炒散，加入米饭、火腿肠、葱花翻炒均匀",
+        ingredients: [
+          ["剩米饭", 100, "克"],
+          ["鸡蛋", 1, "个"],
+          ["葱花", 5, "克"],
+          ["火腿肠", 0.1, "斤"],
+          ["盐", 1, "克"],
+          ["食用油", 10, "毫升"]
+        ]
+      },
+      {
+        name: "葱油花卷",
+        recipe: "面粉发酵后擀开，撒葱花、盐、食用油，卷起蒸熟",
+        ingredients: [
+          ["面粉", 100, "克"],
+          ["葱花", 10, "克"],
+          ["食用油", 5, "毫升"],
+          ["盐", 1, "克"],
+          ["酵母", 2, "克"],
+          ["水", 50, "毫升"]
+        ]
+      }
+    ],
+    "甜点": [
+      {
+        name: "水果拼盘",
+        recipe: "时令水果切块摆盘，色彩丰富",
+        ingredients: [
+          ["苹果", 0.3, "斤"],
+          ["橙子", 0.3, "斤"],
+          ["葡萄", 0.2, "斤"],
+          ["香蕉", 0.2, "斤"]
+        ]
+      },
+      {
+        name: "拔丝地瓜",
+        recipe: "地瓜炸熟，裹上熬制的糖浆，趁热食用",
+        ingredients: [
+          ["地瓜", 0.5, "斤"],
+          ["白糖", 30, "克"],
+          ["食用油", 20, "毫升"]
+        ]
+      },
+      {
+        name: "酒酿圆子",
+        recipe: "小汤圆煮熟，加入酒酿和桂花",
+        ingredients: [
+          ["小汤圆", 50, "克"],
+          ["酒酿", 30, "毫升"],
+          ["桂花", 2, "克"],
+          ["白糖", 10, "克"]
+        ]
+      }
+    ]
+  };
+
+  // 当前菜单状态
+  let currentMenu = {
+    "凉菜": [],
+    "热菜": [],
+    "汤类": [],
+    "主食": [],
+    "甜点": []
+  };
+
+  // 购物清单状态
+  let shoppingList = [];
+  let purchasedItems = new Set();
+
+  // DOM元素
+  const generateBtn = document.getElementById('generate-menu');
+  const menuDisplay = document.getElementById('menu-display');
+  const searchInput = document.getElementById('search-dish');
+  const searchResults = document.getElementById('search-results');
+  const peopleCount = document.getElementById('people-count');
+  const generateListBtn = document.getElementById('generate-list');
+  const clearListBtn = document.getElementById('clear-list');
+  const printListBtn = document.getElementById('print-list');
+  const shoppingItemsContainer = document.getElementById('shopping-items');
+  const totalItemsSpan = document.getElementById('total-items');
+  const purchasedItemsSpan = document.getElementById('purchased-items');
+
+  // 初始化
+  function init() {
+    generateBtn.addEventListener('click', generateRandomMenu);
+    searchInput.addEventListener('input', searchDishes);
+    generateListBtn.addEventListener('click', generateShoppingList);
+    clearListBtn.addEventListener('click', clearShoppingList);
+    printListBtn.addEventListener('click', printShoppingList);
+
+    // 初始生成一个菜单
+    generateRandomMenu();
+  }
+
+  // 生成随机菜单
+  function generateRandomMenu() {
+    const peopleValue = parseInt(peopleCount.value);
+    let dishCount;
+
+    // 根据人数确定菜品数量
+    if (peopleValue <= 2) {
+      dishCount = {"凉菜": 1, "热菜": 2, "汤类": 1, "主食": 1, "甜点": 1};
+    } else if (peopleValue <= 4) {
+      dishCount = {"凉菜": 2, "热菜": 3, "汤类": 1, "主食": 1, "甜点": 1};
+    } else if (peopleValue <= 6) {
+      dishCount = {"凉菜": 2, "热菜": 4, "汤类": 1, "主食": 1, "甜点": 1};
+    } else if (peopleValue <= 8) {
+      dishCount = {"凉菜": 3, "热菜": 5, "汤类": 1, "主食": 1, "甜点": 1};
+    } else {
+      dishCount = {"凉菜": 4, "热菜": 6, "汤类": 1, "主食": 1, "甜点": 1};
+    }
+
+    // 重置当前菜单
+    currentMenu = {
+      "凉菜": [],
+      "热菜": [],
+      "汤类": [],
+      "主食": [],
+      "甜点": []
+    };
+
+    // 为每个类别生成随机菜品
+    for (const category in dishCount) {
+      const count = dishCount[category];
+      const availableDishes = newYearFoodLibrary[category];
+
+      // 确保不重复选择相同的菜品
+      const selectedIndices = new Set();
+
+      for (let i = 0; i < count; i++) {
+        let randomIndex;
+        do {
+          randomIndex = Math.floor(Math.random() * availableDishes.length);
+        } while (selectedIndices.has(randomIndex) && selectedIndices.size < availableDishes.length);
+
+        selectedIndices.add(randomIndex);
+        currentMenu[category].push({...availableDishes[randomIndex]});
+      }
+    }
+
+    renderMenu();
+  }
+
+  // 渲染菜单到页面
+  function renderMenu() {
+    let menuHTML = '<h2>今日菜单</h2>';
+
+    for (const category in currentMenu) {
+      if (currentMenu[category].length > 0) {
+        menuHTML += `<div class="category-title">${category}</div>`;
+
+        currentMenu[category].forEach((dish, index) => {
+          menuHTML += `
+            <div class="dish-card" data-category="${category}" data-index="${index}">
+              <div class="dish-name">${dish.name}</div>
+              <div class="recipe-text">${dish.recipe}</div>
+              <div class="serving-info">适合 ${getServingInfo(category)}</div>
+              <div class="dish-actions">
+                <button class="action-btn replace-btn" title="替换此菜品">&#128260;</button>
+                <button class="action-btn delete-btn" title="删除此菜品">&#10060;</button>
+              </div>
+            </div>
+          `;
+        });
+      }
+    }
+
+    menuDisplay.innerHTML = menuHTML;
+
+    // 添加事件监听器
+    document.querySelectorAll('.replace-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const category = this.closest('.dish-card').dataset.category;
+        const index = parseInt(this.closest('.dish-card').dataset.index);
+        replaceDish(category, index);
+      });
+    });
+
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const category = this.closest('.dish-card').dataset.category;
+        const index = parseInt(this.closest('.dish-card').dataset.index);
+        deleteDish(category, index);
+      });
+    });
+  }
+
+  // 获取菜品适合人数信息
+  function getServingInfo(category) {
+    const peopleValue = parseInt(peopleCount.value);
+    let multiplier = 1;
+
+    if (peopleValue > 4) {
+      multiplier = Math.ceil(peopleValue / 4);
+    }
+
+    switch(category) {
+      case "凉菜": return `${peopleValue}人 (约${0.2 * multiplier}斤/人)`;
+      case "热菜": return `${peopleValue}人 (约${0.3 * multiplier}斤/人)`;
+      case "汤类": return `${peopleValue}人 (约${0.4 * multiplier}斤/人)`;
+      case "主食": return `${peopleValue}人 (按需)`;
+      case "甜点": return `${peopleValue}人 (按需)`;
+      default: return "适量";
+    }
+  }
+
+  // 替换单个菜品
+  function replaceDish(category, index) {
+    const availableDishes = newYearFoodLibrary[category];
+    const currentDish = currentMenu[category][index];
+
+    // 确保新菜品与当前不同
+    let newDish;
+    do {
+      const randomIndex = Math.floor(Math.random() * availableDishes.length);
+      newDish = availableDishes[randomIndex];
+    } while (newDish.name === currentDish.name);
+
+    currentMenu[category][index] = {...newDish};
+    renderMenu();
+  }
+
+  // 删除单个菜品
+  function deleteDish(category, index) {
+    if (currentMenu[category].length > 1) {
+      currentMenu[category].splice(index, 1);
+      renderMenu();
+    } else {
+      alert(`至少保留一道${category}！`);
+    }
+  }
+
+  // 搜索菜品
+  function searchDishes() {
+    const query = searchInput.value.toLowerCase().trim();
+    let resultsHTML = '';
+
+    if (query.length < 2) {
+      searchResults.innerHTML = '';
+      return;
+    }
+
+    for (const category in newYearFoodLibrary) {
+      newYearFoodLibrary[category].forEach(dish => {
+        if (dish.name.toLowerCase().includes(query)) {
+          resultsHTML += `
+            <div class="search-item" data-category="${category}">
+              <strong>${dish.name}</strong> - ${category}<br>
+              <small>${dish.recipe.substring(0, 60)}...</small>
+            </div>
+          `;
+        }
+      });
+    }
+
+    searchResults.innerHTML = resultsHTML || '未找到匹配的菜品';
+
+    // 添加点击事件
+    document.querySelectorAll('.search-item').forEach(item => {
+      item.addEventListener('click', function() {
+        const category = this.dataset.category;
+        const dishName = this.querySelector('strong').textContent;
+
+        // 查找具体菜品
+        const dish = newYearFoodLibrary[category].find(d => d.name === dishName);
+        if (dish) {
+          // 添加到对应分类
+          currentMenu[category].push({...dish});
+          renderMenu();
+        }
+
+        searchInput.value = '';
+        searchResults.innerHTML = '';
+      });
+    });
+  }
+
+
+
+  // 合并并去重食材（避免同一种食材重复出现）
+  function mergeIngredients(allIngredients) {
+    const mergedMap = new Map();
+    allIngredients.forEach(ingredient => {
+      const [name, amount, unit] = ingredient;
+      if (mergedMap.has(name)) {
+        // 已存在，累加用量
+        const existing = mergedMap.get(name);
+        mergedMap.set(name, [existing[0] + amount, unit]);
+      } else {
+        // 不存在，新增
+        mergedMap.set(name, [amount, unit]);
+      }
+    });
+    // 转换为数组返回
+    return Array.from(mergedMap, ([name, [amount, unit]]) => [name, amount, unit]);
+  }
+
+  // 生成购物清单
+  function generateShoppingList() {
+    // 清空当前清单
+    shoppingList = [];
+    purchasedItems.clear();
+
+    // 获取人数
+    const peopleNum = parseInt(peopleCount.value) || 4;
+
+    // 从当前菜单中提取所有食材
+    const allIngredients = [];
+
+    for (const category in currentMenu) {
+      currentMenu[category].forEach(dish => {
+        if (dish.ingredients) {
+          // 根据人数计算食材用量
+          dish.ingredients.forEach(ingredient => {
+            const [name, amount, unit] = ingredient;
+            const totalAmount = amount * peopleNum;
+            allIngredients.push([name, totalAmount, unit, category]);
+          });
+        }
+      });
+    }
+
+    // 合并并去重食材
+    const mergedIngredients = mergeIngredients(allIngredients);
+
+    // 转换为购物清单格式
+    shoppingList = mergedIngredients.map(([name, amount, unit]) => {
+      // 查找这个食材来自哪些菜品
+      const categories = [];
+      for (const category in currentMenu) {
+        currentMenu[category].forEach(dish => {
+          if (dish.ingredients) {
+            const hasIngredient = dish.ingredients.some(ing => ing[0] === name);
+            if (hasIngredient && !categories.includes(category)) {
+              categories.push(category);
+            }
+          }
+        });
+      }
+
+      return {
+        name: name,
+        amount: amount,
+        unit: unit,
+        categories: categories,
+        purchased: false
+      };
+    });
+
+    // 按字母顺序排序
+    shoppingList.sort((a, b) => a.name.localeCompare(b.name));
+
+    // 渲染购物清单
+    renderShoppingList();
+  }
+
+  // 渲染购物清单
+  function renderShoppingList() {
+    if (shoppingList.length === 0) {
+      shoppingItemsContainer.innerHTML = '<p>购物清单为空，请先添加菜品到菜单</p>';
+      totalItemsSpan.textContent = '0';
+      purchasedItemsSpan.textContent = '0';
+      return;
+    }
+
+    let listHTML = '';
+    let purchasedCount = 0;
+
+    shoppingList.forEach((item, index) => {
+      const isPurchased = purchasedItems.has(item.name);
+      if (isPurchased) purchasedCount++;
+
+      // 格式化数量，保留2位小数
+      const formattedAmount = item.amount % 1 === 0 ? item.amount : item.amount.toFixed(2);
+
+      listHTML += `
+        <div class="shopping-item" data-index="${index}">
+          <div class="item-info">
+            <input type="checkbox" class="item-checkbox" ${isPurchased ? 'checked' : ''}
+                   onchange="togglePurchased('${item.name}')">
+            <div class="item-name ${isPurchased ? 'strikethrough' : ''}"
+                 onclick="togglePurchased('${item.name}')">
+              ${item.name}
+            </div>
+            <div class="item-quantity">${formattedAmount} ${item.unit}</div>
+            <div class="category-badge">${item.categories.join(', ')}</div>
+          </div>
+          <button class="action-btn" onclick="removeFromList('${item.name}')" title="从清单中移除">&#10060;</button>
+        </div>
+      `;
+    });
+
+    shoppingItemsContainer.innerHTML = listHTML;
+    totalItemsSpan.textContent = shoppingList.length;
+    purchasedItemsSpan.textContent = purchasedCount;
+  }
+
+  // 切换物品购买状态
+  function togglePurchased(itemName) {
+    if (purchasedItems.has(itemName)) {
+      purchasedItems.delete(itemName);
+    } else {
+      purchasedItems.add(itemName);
+    }
+    renderShoppingList();
+  }
+
+  // 从清单中移除物品
+  function removeFromList(itemName) {
+    shoppingList = shoppingList.filter(item => item.name !== itemName);
+    purchasedItems.delete(itemName);
+    renderShoppingList();
+  }
+
+  // 清空购物清单
+  function clearShoppingList() {
+    if (shoppingList.length === 0) {
+      alert('购物清单已经是空的！');
+      return;
+    }
+
+    if (confirm('确定要清空购物清单吗？')) {
+      shoppingList = [];
+      purchasedItems.clear();
+      renderShoppingList();
+    }
+  }
+
+  // 打印购物清单
+  function printShoppingList() {
+    if (shoppingList.length === 0) {
+      alert('购物清单为空，请先生成购物清单！');
+      return;
+    }
+
+    // 创建打印内容
+    const peopleNum = parseInt(peopleCount.value) || 4;
+    let printContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>新年菜单购物清单</title>
+        <style>
+          body { font-family: 'Microsoft YaHei', sans-serif; padding: 20px; }
+          h1 { color: #d32f2f; text-align: center; }
+          h2 { color: #333; border-bottom: 2px solid #d32f2f; padding-bottom: 5px; }
+          h3 { color: #666; margin-top: 20px; }
+          .menu-summary { background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0; }
+          .menu-item { margin: 5px 0; }
+          .shopping-list { margin-top: 20px; }
+          .shopping-item { padding: 8px 0; border-bottom: 1px solid #eee; }
+          .shopping-item.checked { text-decoration: line-through; color: #888; }
+          .quantity { background: #eee; padding: 2px 8px; border-radius: 10px; font-size: 12px; }
+          .category { font-size: 12px; color: #2e7d32; background: #e8f5e9; padding: 2px 8px; border-radius: 10px; }
+          .date { text-align: right; color: #666; font-size: 14px; }
+          .summary { background: #ffebee; padding: 10px; border-radius: 5px; margin: 20px 0; }
+        </style>
+      </head>
+      <body>
+        <h1>新年菜单购物清单</h1>
+        <div class="date">生成时间: ${new Date().toLocaleString()}</div>
+
+        <div class="menu-summary">
+          <h2>菜单摘要</h2>
+          <p>用餐人数: ${peopleNum}人</p>
+    `;
+
+    // 添加菜单列表
+    for (const category in currentMenu) {
+      if (currentMenu[category].length > 0) {
+        printContent += `<h3>${category}</h3>`;
+        currentMenu[category].forEach(dish => {
+          printContent += `<div class="menu-item">${dish.name}</div>`;
+        });
+      }
+    }
+
+    printContent += `
+        </div>
+
+        <div class="summary">
+          总计: ${shoppingList.length} 项物品 | 已购: ${purchasedItems.size} 项
+        </div>
+
+        <div class="shopping-list">
+          <h2>购物清单</h2>
+    `;
+
+    // 分离已购买和未购买的物品
+    const uncheckedItems = shoppingList.filter(item => !purchasedItems.has(item.name));
+    const checkedItems = shoppingList.filter(item => purchasedItems.has(item.name));
+
+    if (uncheckedItems.length > 0) {
+      printContent += '<h3>待购买</h3>';
+      uncheckedItems.forEach(item => {
+        const formattedAmount = item.amount % 1 === 0 ? item.amount : item.amount.toFixed(2);
+        printContent += `
+          <div class="shopping-item">
+            ${item.name}
+            <span class="quantity">${formattedAmount} ${item.unit}</span>
+            <span class="category">${item.categories.join(', ')}</span>
+          </div>
+        `;
+      });
+    }
+
+    if (checkedItems.length > 0) {
+      printContent += '<h3>已购买</h3>';
+      checkedItems.forEach(item => {
+        const formattedAmount = item.amount % 1 === 0 ? item.amount : item.amount.toFixed(2);
+        printContent += `
+          <div class="shopping-item checked">
+            ${item.name}
+            <span class="quantity">${formattedAmount} ${item.unit}</span>
+            <span class="category">${item.categories.join(', ')}</span>
+          </div>
+        `;
+      });
+    }
+
+    printContent += `
+        </div>
+      </body>
+      </html>
+    `;
+
+    // 打开打印窗口
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.focus();
+
+    // 延迟打印以确保内容加载完成
+    setTimeout(() => {
+      printWindow.print();
+    }, 500);
+  }
+
+  // 页面加载完成后初始化
+  document.addEventListener('DOMContentLoaded', init);
+</script>
+
+<!-- 页脚 -->
+<footer style="text-align: center; font-size: 12px; color: #666; padding: 20px; border-top: 1px solid #eee; margin-top: 40px;">
+  <p>
+    <!-- 版权信息 -->
+    <span>Copyright © 2026 Avocado果语 版权所有</span>
+    <br>
+    <!-- ICP备案信息（必须超链接） -->
+    <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer" style="color: #666; margin-right: 15px;">
+      [粤ICP备2026011724号-1]
+    </a>
+    <!--
+    公安备案信息（建议超链接） 申请后改
+    <a href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=[公安备案号纯数字]" target="_blank" rel="noopener noreferrer" style="color: #666;">
+      [公安备案号位置]
+    </a>
+    -->
+  </p>
+</footer>
+
+</body>
+</html>
